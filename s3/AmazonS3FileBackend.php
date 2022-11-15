@@ -107,12 +107,12 @@ class AmazonS3FileBackend extends FileBackendStore {
 	 * @throws AmazonS3MisconfiguredException if no containerPaths is set
 	 */
 	public function __construct( array $config ) {
-		global $wgAWSCredentials, $wgAWSRegion, $wgAWSUseHTTPS;
+		global $wgAWSCredentials, $wgAWSRegion, $wgAWSUseHTTPS, $wgAWSEndpoint;
 
 		parent::__construct( $config );
 
 		$this->encryption = (bool)( $config['awsEncryption'] ?? false );
-		$useHTTPS = $this->encryption ? true : (bool)( $config['awsHttps'] ?? $wgAWSUseHTTPS );
+		$useHTTPS = $this->encryption || ($config['awsHttps'] ?? $wgAWSUseHTTPS);
 
 		if ( isset( $config['shardViaHashLevels'] ) ) {
 			$this->shardViaHashLevels = $config['shardViaHashLevels'];
@@ -140,7 +140,9 @@ class AmazonS3FileBackend extends FileBackendStore {
 
 		if ( isset( $config['endpoint'] ) ) {
 			$params['endpoint'] = $config['endpoint'];
-		}
+		} else if (isset($wgAWSEndpoint)) {
+            $params['endpoint'] = $wgAWSEndpoint;
+        }
 
 		$this->client = new S3Client( $params );
 
@@ -303,7 +305,7 @@ class AmazonS3FileBackend extends FileBackendStore {
 		$ret = $this->runWithExceptionHandling( __FUNCTION__, function ()
 			use ( $params, $container, $bucket, $key, $contentType, $sha1Hash ) {
 			return $this->client->putObject( array_filter( [
-				'ACL' => $this->isSecure( $container ) ? 'private' : 'public-read',
+//				'ACL' => $this->isSecure( $container ) ? 'private' : 'public-read',
 				'Body' => $params['content'],
 				'Bucket' => $bucket,
 				'CacheControl' => $params['headers']['cache-control'],
@@ -412,7 +414,7 @@ class AmazonS3FileBackend extends FileBackendStore {
 		$ret = $this->runWithExceptionHandling( __FUNCTION__, function ()
 			use ( $dstContainer, $dstBucket, $params, $srcBucket, $srcKey, $dstKey ) {
 			return $this->client->copyObject( array_filter( [
-				'ACL' => $this->isSecure( $dstContainer ) ? 'private' : 'public-read',
+//				'ACL' => $this->isSecure( $dstContainer ) ? 'private' : 'public-read',
 				'Bucket' => $dstBucket,
 				'CacheControl' => $params['headers']['cache-control'],
 				'ContentDisposition' => $params['headers']['content-disposition'],
