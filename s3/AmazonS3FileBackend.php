@@ -124,7 +124,7 @@ class AmazonS3FileBackend extends FileBackendStore {
 		}
 
 		$params = [
-			'version' => '2006-03-01',
+			'version' => 'latest',
 			'region' => $config['awsRegion'] ?? $wgAWSRegion,
 			'scheme' => $useHTTPS ? 'https' : 'http'
 		];
